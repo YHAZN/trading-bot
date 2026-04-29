@@ -1,181 +1,175 @@
-# AI Trading Bot - TODO FUN
+# AI Trading Bot - Dual Mode (Paper + Live)
 
-**Status:** Week 1 - Building Spot Trading Engine
-**Started:** April 27, 2026
-**Goal:** Institutional-grade trading bot with smart strategies
+**Status:** ✅ Paper trading ready | 🔒 Live trading locked until proven
 
 ---
 
-## Project Overview
+## Quick Start
 
-**Phase 1 (Week 1):** Spot trading (BTC/ETH)
-- Paper trading on Binance testnet
-- Mean reversion + regime detection
-- Institutional risk management
+### Paper Trading (Safe - No Real Money)
+```bash
+cd ~/Workspace/trading-bot
+python3 run.py --mode=paper --duration=60
+```
 
-**Phase 2 (Week 2-3):** Add futures (2-3x leverage)
-- Only after spot is profitable
-- Strict liquidation protection
-- Shorting capabilities
+### Live Trading (Real Money - Use After Testing)
+```bash
+python3 run.py --mode=live --duration=60
+```
 
-**Phase 3 (Month 2+):** Scale and optimize
-- Multi-strategy portfolio
-- News-based trading
-- Advanced indicators
+---
+
+## What's Built
+
+✅ **Dual-mode architecture**
+- Paper trading executor (simulated fills)
+- Live trading executor (real Kraken orders)
+- Smart router that switches between them
+
+✅ **Kraken API connected**
+- Real-time price feeds
+- Account balance checks
+- Order placement ready
+
+✅ **Risk management**
+- Position size limits (2% per trade)
+- Stop-losses (2%)
+- Daily loss limits (5%)
+- Slippage simulation (5 bps)
+- Commission simulation (16 bps = Kraken fees)
+
+✅ **Safety features**
+- Confirmation required for live trades
+- Paper mode can't touch real money
+- All trades logged
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Trading Bot System                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌──────────────┐      ┌──────────────┐      ┌───────────┐ │
-│  │   Data       │─────▶│   Strategy   │─────▶│   Risk    │ │
-│  │   Pipeline   │      │   Engine     │      │  Manager  │ │
-│  └──────────────┘      └──────────────┘      └───────────┘ │
-│         │                      │                     │       │
-│         │                      │                     │       │
-│         ▼                      ▼                     ▼       │
-│  ┌──────────────┐      ┌──────────────┐      ┌───────────┐ │
-│  │  TimescaleDB │      │   OpenClaw   │      │ Execution │ │
-│  │  (Storage)   │      │   (Agent)    │      │  Engine   │ │
-│  └──────────────┘      └──────────────┘      └───────────┘ │
-│                                                               │
-└─────────────────────────────────────────────────────────────┘
+run.py (main bot)
+    ↓
+trading_router.py (mode switcher)
+    ↓
+    ├─→ paper_trader.py (simulated)
+    └─→ live_trader.py (real Kraken API)
 ```
 
 ---
 
-## Tech Stack
+## Configuration
 
-**Execution Engine:** Rust
-- Sub-millisecond latency
-- Memory safe
-- Production-grade
+**File:** `config/mode.json`
 
-**Strategy Layer:** Python + OpenClaw
-- Rapid iteration
-- AI-powered analysis
-- Easy to modify
-
-**Database:** TimescaleDB
-- Time-series optimized
-- Stores tick data
-- Fast queries
-
-**Exchange:** Binance
-- Best API
-- High liquidity
-- Testnet available
-
----
-
-## Directory Structure
-
-```
-trading-bot/
-├── README.md                 # This file
-├── docs/
-│   ├── STRATEGIES.md         # All trading strategies
-│   ├── RISK_MANAGEMENT.md    # Risk rules and formulas
-│   ├── ARCHITECTURE.md       # System design
-│   ├── BACKTESTING.md        # Testing methodology
-│   └── DEPLOYMENT.md         # How to run
-├── src/
-│   ├── engine/               # Rust execution engine
-│   ├── strategy/             # Python strategies
-│   ├── data/                 # Data pipeline
-│   └── agent/                # OpenClaw integration
-├── data/
-│   ├── historical/           # Historical price data
-│   ├── backtest/             # Backtest results
-│   └── live/                 # Live trading logs
-├── config/
-│   ├── binance.json          # Exchange config
-│   ├── strategies.json       # Strategy parameters
-│   └── risk.json             # Risk limits
-└── logs/                     # System logs
+```json
+{
+  "mode": "paper",  ← Change to "live" when ready
+  "paper": {
+    "starting_balance": 10000,
+    "slippage_bps": 5,
+    "commission_bps": 16
+  },
+  "live": {
+    "max_position_size": 0.02,
+    "daily_loss_limit": 0.05,
+    "require_confirmation": true
+  }
+}
 ```
 
 ---
 
-## Quick Start
+## Testing
 
-**1. Setup (First Time)**
+**Test paper trading:**
 ```bash
 cd ~/Workspace/trading-bot
-./scripts/setup.sh
+python3 run.py --mode=paper --duration=60
 ```
 
-**2. Paper Trading**
+**Test Kraken connection:**
 ```bash
-./scripts/run-paper.sh
-```
-
-**3. Live Trading (After Testing)**
-```bash
-./scripts/run-live.sh
+python3 scripts/test-kraken-connection.py
 ```
 
 ---
 
-## Documentation
+## Next Steps
 
-- **[STRATEGIES.md](docs/STRATEGIES.md)** - Trading strategies and logic
-- **[RISK_MANAGEMENT.md](docs/RISK_MANAGEMENT.md)** - Risk rules and position sizing
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and components
-- **[BACKTESTING.md](docs/BACKTESTING.md)** - How to backtest strategies
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment guide
+### Week 1 (Current)
+- [x] Kraken API connected
+- [x] Paper trading executor
+- [x] Live trading executor
+- [x] Trading router
+- [ ] Implement mean reversion strategy
+- [ ] Add data pipeline (WebSocket)
+- [ ] Add backtesting
 
----
+### Week 2-3
+- [ ] Run paper trading 24/7
+- [ ] Collect performance data
+- [ ] Optimize strategy parameters
+- [ ] Add more strategies
 
-## Current Status
-
-**Week 1 Progress:**
-- [x] Project structure created
-- [ ] Data pipeline (Binance WebSocket)
-- [ ] TimescaleDB setup
-- [ ] Strategy engine (mean reversion)
-- [ ] Risk management layer
-- [ ] Backtesting framework
-- [ ] Paper trading deployment
-
-**Next Steps:**
-1. Set up Binance testnet API keys
-2. Build data pipeline
-3. Implement first strategy
-4. Run backtests
-5. Deploy to paper trading
+### Week 4+
+- [ ] Review paper trading results
+- [ ] If profitable (>55% win rate, Sharpe >1.5):
+  - Switch to live mode
+  - Start with $500-1000
+  - Scale gradually
 
 ---
 
 ## Safety Rules
 
-**NEVER:**
-- Trade without stop-losses
-- Use more than 2% per trade
-- Exceed 5% total portfolio risk
-- Trade during extreme volatility
-- Ignore daily loss limits
+**NEVER go live until:**
+1. ✅ Paper trading profitable for 2+ weeks
+2. ✅ Win rate >55%
+3. ✅ Max drawdown <10%
+4. ✅ Sharpe ratio >1.5
+5. ✅ You understand every trade the bot makes
 
-**ALWAYS:**
-- Paper trade first (minimum 2 weeks)
-- Review trades daily
-- Update risk limits
-- Monitor system health
-- Keep logs of everything
-
----
-
-## Contact
-
-**Owner:** Haze (TODO FUN)
-**Agent:** Kō (Chief of Staff)
-**Started:** April 27, 2026
+**When live:**
+- Start small ($500-1000)
+- 1-2% position sizes
+- Monitor daily
+- Stop if daily loss >5%
 
 ---
 
-**Remember:** This is a learning project. Expect losses. Never trade money you can't afford to lose.
+## Files
+
+```
+trading-bot/
+├── run.py                    # Main bot runner
+├── config/
+│   ├── mode.json             # Paper/live mode config
+│   └── kraken.json           # Kraken API config
+├── src/
+│   └── executor/
+│       ├── paper_trader.py   # Paper trading engine
+│       ├── live_trader.py    # Live trading engine
+│       └── trading_router.py # Mode switcher
+├── scripts/
+│   └── test-kraken-connection.py
+├── data/
+│   └── paper_trading_state.json  # Paper trading logs
+└── docs/
+    ├── DUAL_MODE_ARCHITECTURE.md
+    └── KRAKEN_SETUP.md
+```
+
+---
+
+## Current Status
+
+**Paper trading:** ✅ Working
+**Live trading:** ✅ Working (but locked behind confirmation)
+**Strategy:** ⏳ Simple buy/sell (needs improvement)
+**Data pipeline:** ⏳ Not built yet
+**Backtesting:** ⏳ Not built yet
+
+---
+
+**Remember:** Paper trading success doesn't guarantee live success. Test thoroughly.

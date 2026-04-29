@@ -1,0 +1,41 @@
+{
+  "exchange": "kraken",
+  "api": {
+    "base_url": "https://api.kraken.com",
+    "ws_url": "wss://ws.kraken.com",
+    "testnet_url": "https://api.demo.kraken.com",
+    "testnet_ws": "wss://demo-futures.kraken.com/ws/v1"
+  },
+  "credentials": {
+    "api_key": "",
+    "api_secret": "",
+    "testnet_key": "",
+    "testnet_secret": ""
+  },
+  "trading": {
+    "pairs": [
+      "XXBTZUSD",
+      "XETHZUSD"
+    ],
+    "order_types": ["market", "limit", "stop-loss", "take-profit"],
+    "leverage_available": true,
+    "max_leverage": 5
+  },
+  "fees": {
+    "maker": 0.0016,
+    "taker": 0.0026,
+    "volume_tiers": true
+  },
+  "limits": {
+    "rate_limit_per_second": 15,
+    "rate_limit_per_minute": 60,
+    "max_order_size_btc": 1000,
+    "min_order_size_btc": 0.0001
+  },
+  "features": {
+    "websocket": true,
+    "futures": true,
+    "margin": true,
+    "staking": true
+  }
+}

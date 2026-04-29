@@ -1,0 +1,25 @@
+{
+  "mode": "paper",
+  "paper": {
+    "starting_balance": 10000,
+    "use_live_prices": true,
+    "log_all_trades": true,
+    "slippage_bps": 5,
+    "commission_bps": 16
+  },
+  "live": {
+    "max_position_size": 0.02,
+    "daily_loss_limit": 0.05,
+    "max_drawdown": 0.10,
+    "require_confirmation": true,
+    "min_win_rate": 0.55,
+    "min_sharpe": 1.5
+  },
+  "risk": {
+    "max_position_pct": 0.02,
+    "stop_loss_pct": 0.02,
+    "take_profit_pct": 0.04,
+    "max_daily_trades": 10,
+    "max_open_positions": 2
+  }
+}

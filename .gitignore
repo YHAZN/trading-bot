@@ -1,0 +1,36 @@
+# Environment & secrets
+.env
+*.env
+.env.*
+config/credentials.json
+config/api_keys.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+
+# Data (runtime state, not source)
+data/paper_trading_state.json
+data/price_history.json
+logs/
+*.log
+
+# Backups
+*.backup
+*.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

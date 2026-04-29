@@ -1,0 +1,42 @@
+{
+  "exchange": "coinbase",
+  "api": {
+    "base_url": "https://api.coinbase.com/api/v3/brokerage",
+    "ws_url": "wss://advanced-trade-ws.coinbase.com",
+    "sandbox_url": "https://api-public.sandbox.exchange.coinbase.com",
+    "sandbox_ws": "wss://ws-feed-public.sandbox.exchange.coinbase.com"
+  },
+  "credentials": {
+    "api_key": "",
+    "api_secret": "",
+    "sandbox_key": "",
+    "sandbox_secret": ""
+  },
+  "trading": {
+    "pairs": [
+      "BTC-USD",
+      "ETH-USD"
+    ],
+    "order_types": ["market", "limit", "stop", "stop_limit"],
+    "leverage_available": false,
+    "max_leverage": 1
+  },
+  "fees": {
+    "maker": 0.004,
+    "taker": 0.006,
+    "volume_tiers": true,
+    "notes": "Advanced Trade pricing - lower than regular Coinbase"
+  },
+  "limits": {
+    "rate_limit_per_second": 10,
+    "rate_limit_per_minute": 30,
+    "max_order_size_btc": 100,
+    "min_order_size_btc": 0.00001
+  },
+  "features": {
+    "websocket": true,
+    "futures": false,
+    "margin": false,
+    "staking": true
+  }
+}

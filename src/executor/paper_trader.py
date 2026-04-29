@@ -121,6 +121,7 @@ class PaperTrader:
             "total_trades": len(sells),
             "total_pnl": self.pnl,
             "win_rate": len(wins) / len(sells) if sells else 0,
+            "winning_trades": len(wins),
             "balance": self.balance,
             "open_positions": len(self.positions),
             "total_value": self.balance + sum(

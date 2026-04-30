@@ -30,7 +30,7 @@ _cfg = _load_claude_config()
 
 # Haiku = cheap, fast — for technical + sentiment agents
 # Sonnet = better reasoning — for synthesis agent
-MODEL_FAST = "claude-haiku-4-5"
+MODEL_FAST = "claude-haiku-4-5-20251001"
 MODEL_SMART = "claude-sonnet-4-6"
 
 # OpenRouter model IDs (fallback)
@@ -39,15 +39,20 @@ OR_MODEL_SMART = "anthropic/claude-sonnet-4-6"
 
 
 def _load_openrouter_config() -> dict:
-    with open(_CONFIG_PATH) as f:
-        d = json.load(f)
-    providers = d.get("models", {}).get("providers", {})
-    if not providers:
-        providers = d.get("providers", {})
-    or_cfg = providers.get("openrouter", {})
+    # Prefer credentials file (full key) over config (may be truncated)
+    key_file = Path.home() / ".openclaw" / "credentials" / "openrouter-api-key.txt"
+    if key_file.exists():
+        api_key = key_file.read_text().strip()
+    else:
+        with open(_CONFIG_PATH) as f:
+            d = json.load(f)
+        providers = d.get("models", {}).get("providers", {})
+        if not providers:
+            providers = d.get("providers", {})
+        api_key = providers.get("openrouter", {}).get("apiKey", "")
     return {
-        "base_url": or_cfg.get("baseUrl", "https://openrouter.ai/api/v1"),
-        "api_key": or_cfg.get("apiKey", ""),
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key": api_key,
     }
 
 _or_cfg = _load_openrouter_config()
@@ -55,46 +60,22 @@ _or_cfg = _load_openrouter_config()
 
 def call_claude(system_prompt: str, user_message: str, model: str = MODEL_FAST, max_tokens: int = 512) -> str:
     """
-    Single-turn LLM call. Tries routeai.cc (Anthropic proxy) first, falls back to OpenRouter.
-    Returns the text response. Raises on both failing.
+    Single-turn Claude call via routeai.cc proxy.
+    Returns the text response. Raises on HTTP error or empty response.
     """
-    # Try primary (routeai.cc Anthropic proxy)
-    try:
-        url = f"{_cfg['base_url']}/v1/messages"
-        headers = {
-            "x-api-key": _cfg["api_key"],
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        }
-        payload = {
-            "model": model,
-            "max_tokens": max_tokens,
-            "system": system_prompt,
-            "messages": [{"role": "user", "content": user_message}],
-        }
-        r = requests.post(url, headers=headers, json=payload, timeout=15)
-        r.raise_for_status()
-        data = r.json()
-        return data["content"][0]["text"].strip()
-    except Exception as primary_err:
-        pass  # Fall through to OpenRouter
-
-    # Fallback: OpenRouter (OpenAI-compatible)
-    or_model = OR_MODEL_SMART if model == MODEL_SMART else OR_MODEL_FAST
-    url = f"{_or_cfg['base_url']}/chat/completions"
+    url = f"{_cfg['base_url']}/v1/messages"
     headers = {
-        "Authorization": f"Bearer {_or_cfg['api_key']}",
+        "x-api-key": _cfg["api_key"],
+        "anthropic-version": "2023-06-01",
         "content-type": "application/json",
     }
     payload = {
-        "model": or_model,
+        "model": model,
         "max_tokens": max_tokens,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
-        ],
+        "system": system_prompt,
+        "messages": [{"role": "user", "content": user_message}],
     }
     r = requests.post(url, headers=headers, json=payload, timeout=15)
     r.raise_for_status()
     data = r.json()
-    return data["choices"][0]["message"]["content"].strip()
+    return data["content"][0]["text"].strip()

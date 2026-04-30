@@ -493,3 +493,87 @@ for name, data in strategies.items():
 - Review strategies monthly, disable underperformers
 
 **Remember:** No strategy works forever. Markets change. Adapt or die.
+## Strategy 4: Opening Range Breakout (ORB)
+
+**Type:** Momentum breakout
+**Timeframe:** 15-minute candles
+**Assets:** NASDAQ/US 100 CFD (primary), adaptable to BTC
+**Session:** NYSE open window only (9:14 AM – 11:30 AM ET, Mon-Fri)
+**Source:** Backtested 5-year tick data, 88% win rate, 2.5% max drawdown
+
+---
+
+### Core Logic
+
+The first 15-minute candle after pre-market (9:00–9:15 AM ET) defines the "opening range."
+Price breaking above or below this range signals strong directional conviction from institutional order flow.
+The edge is NOT in the breakout itself — it's in the **aggressive trailing stop** that captures the move
+while cutting losers fast.
+
+### Setup
+
+1. At 9:15 AM ET, note the 9:00–9:15 candle (15-min):
+   - `ORB_HIGH` = high of that candle
+   - `ORB_LOW` = low of that candle
+
+2. Place two pending orders:
+   - **Buy Stop** at `ORB_HIGH + spread` (breakout long)
+   - **Sell Stop** at `ORB_LOW - spread` (breakout short)
+
+3. Only one side will trigger. Cancel the other immediately on fill.
+
+### Entry Conditions
+
+```
+Buy:  Price closes above ORB_HIGH on next 15-min candle close
+Sell: Price closes below ORB_LOW on next 15-min candle close
+```
+
+No indicator confirmation needed — price action is the signal.
+
+### Exit — Aggressive Trailing Stop (THE KEY INNOVATION)
+
+- **Trailing stop distance:** 10 points (US 100)
+- **Activation:** Immediately from entry (not after a profit buffer)
+- **Behavior:** Stop moves up tick-by-tick as price advances; locks in gains early
+
+This trailing stop is **too fast to execute manually** — automation is mandatory.
+
+### Risk Management
+
+```
+Initial SL:  Just below ORB_LOW (for longs) / above ORB_HIGH (for shorts)
+Trailing SL: 10 points, activates from entry
+Max trades:  1 per day (first breakout only)
+Session cut: No new entries after 11:30 AM ET
+```
+
+### Performance (5-Year Backtest on US 100)
+
+| Metric | Value |
+|---|---|
+| Win Rate | 88% |
+| Max Drawdown | 2.5% |
+| Equity Curve | Consistently positive |
+| Mode | Automation required (MQL5 EA or Python) |
+
+### Implementation Notes (Python)
+
+```python
+# Agent already has ORB logic — key parameters:
+ORB_TRAILING_STOP_POINTS = 10   # 10 index points for US 100
+ORB_SESSION_START = "09:14"     # ET
+ORB_SESSION_END   = "11:30"     # ET
+
+# The trailing stop must update every tick, not every candle
+# Use Kraken WebSocket for tick-level data during ORB window
+```
+
+### Why It Works
+
+- Opening range captures overnight sentiment + pre-market position buildup
+- Institutional algos defend the ORB levels, creating self-fulfilling breakouts
+- Aggressive trailing stop means: winners run, losers die fast
+- NYSE-only window avoids low-liquidity chop
+
+---

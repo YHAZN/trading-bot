@@ -1,6 +1,8 @@
 {
-  "total_trades": 0,
-  "total_pnl": 0,
-  "win_rate": 0,
-  "balance": 10000.0
+  "total_trades": 1,
+  "total_pnl": -4.0458638447999125,
+  "win_rate": 0.0,
+  "balance": 9995.9541361552,
+  "open_positions": 0,
+  "total_value": 9995.9541361552
 }

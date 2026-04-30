@@ -16,6 +16,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent / "src" / "executor"))
 from trading_router import TradingRouter
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+from agents import technical_agent, sentiment_agent, synthesis_agent
 
 SUPABASE_URL = "https://uakuqcxhjqlqxduiuzvd.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVha3VxY3hoanFscXhkdWl1enZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMjY2OTQsImV4cCI6MjA5MjkwMjY5NH0.7hpzkUNNR3qwdYUPDnpFsAZpfx1Q57Shl8sTVDRJkEI"
@@ -462,6 +464,33 @@ class TradingAgent:
         return {"signal": "WAIT", "strategy": "mean_rev",
                 "reason": f"MR no setup: Z={z:.2f}, RSI={rsi:.1f}, Regime={regime}"}
 
+    # ─── AI quality gate ─────────────────────────────────────────────────
+
+    def _run_ai_gate(self, indicators: dict) -> dict:
+        """
+        Run technical + sentiment + synthesis agents.
+        Returns synthesis result with composite_score and approved flag.
+        Only called when a rule-based BUY signal triggers — gates the final execution.
+        """
+        try:
+            stats = self.router.get_stats()
+            has_pos = stats.get("open_positions", 0) > 0
+            tech = technical_agent.run(self.candles, indicators, has_pos, self.entry_price)
+            sent = sentiment_agent.run()
+            result = synthesis_agent.run(tech, sent)
+            self.log(
+                f"🤖 AI Gate | Tech:{tech['signal']}({tech['confidence']:.2f}) "
+                f"Sent:{sent['sentiment']}({sent['score']:.2f}) "
+                f"Composite:{result['composite_score']:.2f} "
+                f"→ {result['signal']} {'✅' if result['approved'] else '🚫'}",
+                data=result,
+            )
+            return result
+        except Exception as e:
+            self.log(f"⚠️ AI gate failed, passing trade through: {e}", "ERROR")
+            # Fail open — if AI gate crashes, don't block trading entirely
+            return {"signal": "PASS", "composite_score": 0.0, "approved": True, "reasoning": f"Gate error: {e}"}
+
     def _analyze(self, price: float, indicators: dict | None) -> dict:
         """
         Strategy router:
@@ -537,6 +566,13 @@ class TradingAgent:
 
                 # Execute
                 qty = self.params.get("position_size", 0.01)
+                if analysis["signal"] == "BUY":
+                    # AI quality gate — must approve before execution
+                    if indicators:
+                        ai = self._run_ai_gate(indicators)
+                        if not ai.get("approved", False):
+                            analysis["signal"] = "WAIT"
+                            analysis["reason"] = f"AI gate blocked: {ai.get('reasoning', '')} (score={ai.get('composite_score', 0):.2f})"
                 if analysis["signal"] == "BUY":
                     result = self.router.buy("BTC", price, qty)
                     if result["success"]:
